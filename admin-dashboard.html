@@ -1,0 +1,715 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>BUK Shuttle — Admin Dashboard (Tickets)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --primary: #5bb0f0;
+      --bg: #f2f8ff;
+      --muted: #6b7280;
+      --card-radius: 12px;
+      --max-width: 1200px;
+      --nav-height: 72px;
+    }
+    * { box-sizing: border-box; }
+    html,body { height:100%; margin:0; font-family: 'Poppins', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; background:var(--bg); color:#071223; }
+
+    header{
+      background:var(--primary);
+      color:white;
+      padding:14px 18px;
+      display:flex;
+      align-items:center;
+      gap:12px;
+      font-weight:700;
+      position:sticky;
+      top:0;
+      z-index:90;
+      box-shadow:0 2px 8px rgba(0,0,0,0.08);
+    }
+    .logo{ width:36px; height:36px; border-radius:8px; background:rgba(255,255,255,0.14); display:grid; place-items:center; font-weight:800; }
+
+    main.container{ max-width:var(--max-width); margin:18px auto; padding:10px 16px 90px 16px; } /* bottom nav space */
+
+    h2 { margin:0 0 10px 0; font-size:1.1rem; }
+
+    /* cards */
+    .cards { display:grid; gap:12px; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); margin-top:8px; }
+    .card { background:white; border-radius:var(--card-radius); padding:14px; box-shadow:0 8px 24px rgba(10,20,40,0.04); }
+    .card .label{ color:var(--muted); font-size:.86rem; }
+    .card .value{ color:var(--primary); font-weight:700; font-size:1.15rem; margin-top:6px; }
+
+    /* table */
+    .table-wrap { background:white; border-radius:12px; padding:8px; box-shadow:0 8px 24px rgba(10,20,40,0.04); margin-top:12px; overflow:auto; }
+    table { width:100%; border-collapse:collapse; min-width:640px; font-size:.95rem; }
+    thead th { text-align:left; padding:10px; background:var(--primary); color:#fff; font-weight:700; position:sticky; top:0; z-index:2; }
+    tbody td { padding:10px; border-bottom:1px solid rgba(11,23,34,0.05); vertical-align:middle; }
+    .nowrap{ white-space:nowrap; }
+
+    input[type="text"], input[type="email"], input[type="number"], select, textarea {
+      padding:10px; border-radius:8px; border:1px solid rgba(11,23,34,0.06); width:100%; font-size:.95rem;
+    }
+
+    .btn { padding:8px 12px; border-radius:8px; border:0; cursor:pointer; color:#fff; font-weight:700; display:inline-flex; align-items:center; gap:8px; }
+    .btn.primary{ background:var(--primary); }
+    .btn.ghost{ background:transparent; color:var(--muted); border:1px solid rgba(11,23,34,0.06); }
+    .btn.danger{ background:#dc3545; }
+    .btn.warn{ background:#ff9800; color:#fff; }
+    .btn.view{ background:#10b981; }
+
+    /* bottom nav - visible on all sizes per request */
+    .bottom-nav { position:fixed; left:0; right:0; bottom:0; height:var(--nav-height); background:white; display:flex; z-index:100; box-shadow:0 -8px 20px rgba(2,6,23,0.08); border-top:1px solid rgba(11,23,34,0.04); }
+    .bottom-nav button { flex:1; border:0; background:transparent; font-weight:700; color:var(--muted); cursor:pointer; font-size:.88rem; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:4px; padding:6px 0; }
+    .bottom-nav button.active{ color:var(--primary); }
+
+    /* hide sections by default; show only active */
+    section.page { display:none; }
+    section.page.active { display:block; }
+
+    /* responsive adjustments */
+    @media (max-width:720px){
+      .cards { grid-template-columns: repeat(auto-fit,minmax(140px,1fr)); }
+      table { font-size:.9rem; }
+      header { padding:12px; }
+      main.container { padding:8px 12px 90px 12px; }
+    }
+
+    /* modal */
+    .modal { display:none; position:fixed; inset:0; background:rgba(2,6,23,0.45); align-items:center; justify-content:center; padding:18px; z-index:200; }
+    .modal.open { display:flex; }
+    .modal-dialog { background:white; width:100%; max-width:760px; border-radius:12px; padding:18px; box-shadow:0 12px 40px rgba(2,6,23,0.2); max-height:88vh; overflow:auto; }
+
+    .muted { color:var(--muted); }
+    .flex { display:flex; gap:12px; align-items:center; }
+    .col { flex:1; }
+
+    /* small helper for mobile tables */
+    @media (max-width:520px){
+      thead { display:none; }
+      table, tbody, tr, td { display:block; width:100%; }
+      tr { margin-bottom:10px; border-radius:8px; background:white; box-shadow:0 6px 18px rgba(10,20,40,0.04); padding:10px; }
+      td { padding:6px 0; border-bottom:0; }
+      td::before { content: attr(data-label); font-weight:600; display:block; color:var(--muted); margin-bottom:6px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">B</div>
+    <div>BUK Shuttle — Admin (Simulator)</div>
+  </header>
+
+  <main class="container" id="app">
+    <!-- Overview -->
+    <section id="overview" class="page active" aria-labelledby="ovTitle">
+      <h2 id="ovTitle">Overview</h2>
+      <div class="cards" role="region" aria-label="Overview metrics">
+        <div class="card"><div class="label">Total Revenue</div><div class="value" id="ov-totalRevenue">₦0</div></div>
+        <div class="card"><div class="label">Daily Revenue</div><div class="value" id="ov-dailyRevenue">₦0</div></div>
+        <div class="card"><div class="label">Tickets Sold</div><div class="value" id="ov-ticketsSold">0</div></div>
+        <div class="card"><div class="label">Total Tickets</div><div class="value" id="ov-totalTickets">0</div></div>
+        <div class="card"><div class="label">Total Wallet Balance</div><div class="value" id="ov-totalWallet">₦0</div></div>
+      </div>
+    </section>
+
+    <!-- Passenger -->
+    <section id="passenger" class="page" aria-labelledby="passTitle">
+      <div class="flex" style="justify-content:space-between">
+        <h2 id="passTitle">Passenger Management</h2>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input id="passengerSearch" type="text" placeholder="Search by name or email">
+          <button id="openAddPassenger" class="btn primary">Add Passenger</button>
+        </div>
+      </div>
+
+      <div class="table-wrap" style="margin-top:12px">
+        <table aria-describedby="passenger-desc">
+          <caption id="passenger-desc" style="text-align:left;color:var(--muted);padding:8px 0">Registered passengers</caption>
+          <thead>
+            <tr><th>Name</th><th>Email</th><th>Wallet</th><th>Tickets</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="passengerTable"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Driver -->
+    <section id="driver" class="page" aria-labelledby="drvTitle">
+      <div class="flex" style="justify-content:space-between">
+        <h2 id="drvTitle">Driver Management</h2>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input id="driverSearch" type="text" placeholder="Search drivers">
+          <button id="openAddDriver" class="btn primary">Add Driver</button>
+        </div>
+      </div>
+
+      <div class="table-wrap" style="margin-top:12px">
+        <table>
+          <thead>
+            <tr><th>Name</th><th>Email</th><th>Bus Number</th><th>Tickets Scanned</th><th>Total Amount</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="driverTable"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Fund -->
+    <section id="fund" class="page" aria-labelledby="fundTitle">
+      <h2 id="fundTitle">Funds Management</h2>
+      <div class="cards" role="region" aria-label="Funds">
+        <div class="card"><div class="label">Total Revenue</div><div class="value" id="fund-totalRevenue">₦0</div></div>
+        <div class="card"><div class="label">Daily Revenue</div><div class="value" id="fund-dailyRevenue">₦0</div></div>
+        <div class="card"><div class="label">Tickets Sold</div><div class="value" id="fund-ticketsSold">0</div></div>
+      </div>
+      <div style="margin-top:12px"><button id="exportFunds" class="btn primary">Export Funds Data (CSV)</button></div>
+    </section>
+
+    <!-- Tickets (NEW) -->
+    <section id="tickets" class="page" aria-labelledby="ticketsTitle">
+      <div class="flex" style="justify-content:space-between">
+        <h2 id="ticketsTitle">All Ticket Transactions</h2>
+        <div style="display:flex;gap:8px;align-items:center">
+          <select id="ticketFilterStatus" style="min-width:140px;">
+            <option value="all">All Statuses</option>
+            <option value="active">Active</option>
+            <option value="used">Used</option>
+            <option value="cancelled">Cancelled</option>
+            <option value="refunded">Refunded</option>
+          </select>
+          <input id="ticketSearch" type="text" placeholder="Search by ticket id or passenger">
+          <button id="refreshTickets" class="btn ghost">Refresh</button>
+        </div>
+      </div>
+
+      <div class="table-wrap" style="margin-top:12px">
+        <table>
+          <thead>
+            <tr><th>Ticket ID</th><th>Passenger</th><th>Route</th><th>Status</th><th>Fare</th><th>Date</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="ticketsTable"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Profile -->
+    <section id="profile" class="page" aria-labelledby="profileTitle">
+      <h2 id="profileTitle">Profile</h2>
+      <div class="card" style="max-width:720px">
+        <div class="flex">
+          <div class="col"><label class="muted">Admin Name</label><input id="adminName" type="text" value="Admin01"></div>
+          <div class="col"><label class="muted">Email</label><input id="adminEmail" type="email" value="admin@bukshuttle.com" disabled></div>
+        </div>
+        <div style="margin-top:12px;display:flex;gap:8px;align-items:center">
+          <button id="saveProfile" class="btn primary">Save Changes</button>
+          <button id="changePass" class="btn ghost">Change Password</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Bottom navigation - only nav, visible on all sizes -->
+  <nav class="bottom-nav" aria-label="Primary navigation">
+    <button data-target="overview" class="active">Overview</button>
+    <button data-target="passenger">Passenger</button>
+    <button data-target="driver">Driver</button>
+    <button data-target="fund">Fund</button>
+    <button data-target="tickets">Tickets</button>
+    <button data-target="profile">Profile</button>
+  </nav>
+
+  <!-- Modal -->
+  <div id="modal" class="modal" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal-dialog" id="modalDialog"></div>
+  </div>
+
+  <script>
+    // Full simulator logic with ticket tab implemented, persistence, responsive behavior.
+    (function(){
+      // utils
+      const $ = s => document.querySelector(s);
+      const $$ = s => Array.from(document.querySelectorAll(s));
+      const money = n => '₦' + Number(n||0).toLocaleString('en-NG');
+      const genId = (p='id') => p + '-' + Math.random().toString(36).slice(2,9);
+      const LS = {
+        PASS: 'buk_pass_v2',
+        DRV: 'buk_drv_v2',
+        SNAPS: 'buk_snaps_v2',
+        AUTH: 'buk_auth_v2',
+        PROFILE: 'buk_profile_v2'
+      };
+
+      function load(k, fallback){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : fallback; } catch(e){ return fallback; } }
+      function save(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); } catch(e){ /*ignore*/ } }
+
+      // sample data
+      let passengers = load(LS.PASS, null);
+      if(!passengers || !passengers.length){
+        passengers = [
+          { id: genId('p'), name:'Ahmad Mustapha', email:'ahmad@example.com', wallet:1000, tickets:[
+            { id:'T001', route:'New Site→Old Site', status:'active', fare:200, created:'2025-10-23 10:00' },
+            { id:'T002', route:'Old Site→New Site', status:'used', fare:200, created:'2025-10-22 09:00' }
+          ]},
+          { id: genId('p'), name:'Fatima Bello', email:'fatima@example.com', wallet:500, tickets:[
+            { id:'T010', route:'New Site→Old Site', status:'used', fare:200, created:'2025-10-22 11:00' }
+          ]}
+        ];
+        save(LS.PASS, passengers);
+      }
+
+      let drivers = load(LS.DRV, null);
+      if(!drivers || !drivers.length){
+        drivers = [
+          { id: genId('d'), name:'John Doe', email:'johndoe@example.com', bus:'BUK-001', ticketsScanned:12, totalAmount:2400 }
+        ];
+        save(LS.DRV, drivers);
+      }
+
+      let snapshots = load(LS.SNAPS, []);
+      let profile = load(LS.PROFILE, { name:'Admin01', email:'admin@bukshuttle.com' });
+      save(LS.PROFILE, profile);
+
+      let auth = load(LS.AUTH, { password: 'admin123' });
+      save(LS.AUTH, auth);
+
+      /* ---------- tab switching (bottom nav only) ---------- */
+      const bottomButtons = Array.from(document.querySelectorAll('.bottom-nav button'));
+      const pages = Array.from(document.querySelectorAll('section.page'));
+
+      function setActiveTab(name){
+        pages.forEach(p => p.classList.toggle('active', p.id === name));
+        bottomButtons.forEach(b => b.classList.toggle('active', b.dataset.target === name));
+        // lazy render
+        if(name === 'overview') renderOverview();
+        else if(name === 'passenger') renderPassenger();
+        else if(name === 'driver') renderDriver();
+        else if(name === 'fund') renderFund();
+        else if(name === 'tickets') renderTickets();
+        else if(name === 'profile') renderProfile();
+        // ensure scroll to top of main content
+        window.scrollTo({ top: 0, behavior:'smooth' });
+      }
+      bottomButtons.forEach(b => b.addEventListener('click', ()=> setActiveTab(b.dataset.target)));
+
+      /* ---------- modal ---------- */
+      const modal = $('#modal');
+      const modalDialog = $('#modalDialog');
+      function openModal(html, cb){
+        modalDialog.innerHTML = html;
+        modal.classList.add('open');
+        modal.setAttribute('aria-hidden','false');
+        setTimeout(()=> {
+          const f = modalDialog.querySelector('input, button, select, textarea,[tabindex]:not([tabindex="-1"])');
+          if(f) f.focus();
+          if(typeof cb === 'function') cb();
+        },60);
+      }
+      function closeModal(){
+        modal.classList.remove('open');
+        modal.setAttribute('aria-hidden','true');
+        modalDialog.innerHTML = '';
+      }
+      modal.addEventListener('click', (e) => { if(e.target === modal) closeModal(); });
+      window.addEventListener('keydown', (e) => { if(e.key === 'Escape') closeModal(); });
+
+      /* ---------- Overview / Funds ---------- */
+      function computeTotals(){
+        let totalRevenue = 0, dailyRevenue = 0, ticketsSold = 0, totalTickets = 0, totalWallet = 0;
+        const today = new Date().toISOString().split('T')[0];
+        passengers.forEach(p=>{
+          p.tickets.forEach(t=>{
+            if(t.status === 'used'){ totalRevenue += t.fare; ticketsSold++; }
+            if(t.created && t.created.split(' ')[0] === today){ dailyRevenue += t.fare; }
+            totalTickets++;
+          });
+          totalWallet += p.wallet;
+        });
+        return { totalRevenue, dailyRevenue, ticketsSold, totalTickets, totalWallet };
+      }
+      function renderOverview(){
+        const t = computeTotals();
+        $('#ov-totalRevenue').textContent = money(t.totalRevenue);
+        $('#ov-dailyRevenue').textContent = money(t.dailyRevenue);
+        $('#ov-ticketsSold').textContent = t.ticketsSold;
+        $('#ov-totalTickets').textContent = t.totalTickets;
+        $('#ov-totalWallet').textContent = money(t.totalWallet);
+        // funds mirrors overview
+        $('#fund-totalRevenue').textContent = money(t.totalRevenue);
+        $('#fund-dailyRevenue').textContent = money(t.dailyRevenue);
+        $('#fund-ticketsSold').textContent = t.ticketsSold;
+      }
+
+      /* ---------- Passenger tab ---------- */
+      function renderPassenger(filter=''){
+        const tbody = $('#passengerTable');
+        tbody.innerHTML = '';
+        const q = (filter || '').trim().toLowerCase();
+        const list = passengers.filter(p => (p.name + p.email).toLowerCase().includes(q));
+        list.forEach(p=>{
+          const tr = document.createElement('tr');
+          // responsive data-labels for mobile
+          tr.innerHTML = `<td data-label="Name">${escapeHtml(p.name)}</td>
+                          <td data-label="Email">${escapeHtml(p.email)}</td>
+                          <td data-label="Wallet">${money(p.wallet)}</td>
+                          <td data-label="Tickets">${p.tickets.length}</td>
+                          <td data-label="Actions" class="nowrap"><button class="btn view" data-action="view-pass" data-id="${p.id}">View</button></td>`;
+          tbody.appendChild(tr);
+        });
+      }
+      $('#passengerSearch').addEventListener('input', (e)=> renderPassenger(e.target.value));
+
+      // Add passenger modal
+      $('#openAddPassenger').addEventListener('click', ()=>{
+        const html = `
+          <h3>Add Passenger</h3>
+          <div style="margin-top:12px" class="flex">
+            <div class="col"><label>Name</label><input id="newPassName"></div>
+            <div class="col"><label>Email</label><input id="newPassEmail" type="email"></div>
+          </div>
+          <div style="margin-top:12px" class="flex">
+            <div class="col"><label>Wallet (₦)</label><input id="newPassWallet" type="number" value="0" min="0"></div>
+            <div class="col"><label>Initial tickets (comma separated routes)</label><input id="newPassTickets" placeholder="Route A;Route B"></div>
+          </div>
+          <div style="margin-top:14px;display:flex;justify-content:flex-end;gap:8px">
+            <button id="cancelAddPass" class="btn ghost">Cancel</button>
+            <button id="saveAddPass" class="btn primary">Add</button>
+          </div>`;
+        openModal(html, ()=>{
+          $('#cancelAddPass').addEventListener('click', closeModal);
+          $('#saveAddPass').addEventListener('click', ()=>{
+            const name = $('#newPassName').value.trim();
+            const email = $('#newPassEmail').value.trim();
+            const wallet = Number($('#newPassWallet').value) || 0;
+            const ticketsRaw = $('#newPassTickets').value.trim();
+            if(!name || !email){ alert('Name and email required'); return; }
+            if(passengers.some(x=>x.email.toLowerCase() === email.toLowerCase())){ alert('Email already exists'); return; }
+            const tickets = ticketsRaw ? ticketsRaw.split(';').map(rt => ({ id: genId('t'), route: rt.trim(), status:'active', fare:0, created:new Date().toISOString().replace('T',' ').split('.')[0] })) : [];
+            const newP = { id: genId('p'), name, email, wallet, tickets };
+            passengers.push(newP);
+            save(LS.PASS, passengers);
+            renderPassenger($('#passengerSearch').value);
+            renderOverview();
+            closeModal();
+          });
+        });
+      });
+
+      /* view/edit passenger */
+      document.addEventListener('click', (e)=>{
+        const btn = e.target.closest('button');
+        if(!btn) return;
+        const action = btn.dataset.action;
+        if(action === 'view-pass'){
+          const id = btn.dataset.id;
+          const p = passengers.find(x=>x.id === id);
+          if(!p) return;
+          const html = `
+            <h3>Passenger — ${escapeHtml(p.name)}</h3>
+            <div style="margin-top:10px"><label>Email</label><input id="editPassEmail" type="email" value="${escapeHtml(p.email)}" disabled></div>
+            <div style="margin-top:10px" class="flex">
+              <div class="col"><label>Wallet (₦)</label><input id="editPassWallet" type="number" value="${p.wallet}"></div>
+              <div class="col"><label>Add funds (₦)</label><input id="addPassFunds" type="number" value="0"></div>
+            </div>
+            <div style="margin-top:12px"><label>Tickets</label><div id="passTickets" style="margin-top:8px"></div></div>
+            <div style="margin-top:14px;display:flex;justify-content:flex-end;gap:8px">
+              <button id="closePassModal" class="btn ghost">Close</button>
+              <button id="savePassModal" class="btn primary">Save</button>
+            </div>`;
+          openModal(html, ()=>{
+            const passTickets = $('#passTickets');
+            passTickets.innerHTML = '';
+            p.tickets.forEach(t=>{
+              const div = document.createElement('div');
+              div.style.padding='8px'; div.style.border='1px solid rgba(11,23,34,0.04)'; div.style.borderRadius='8px'; div.style.marginBottom='6px';
+              div.innerHTML = `<div style="font-weight:700">${escapeHtml(t.id)} — ${escapeHtml(t.route)}</div><div class="muted">Status: ${escapeHtml(t.status)} • Fare: ${money(t.fare)} • Date: ${escapeHtml(t.created)}</div>
+                <div style="margin-top:8px;display:flex;gap:8px"><button class="btn warn" data-action="cancel-ticket" data-pid="${p.id}" data-tid="${t.id}">Cancel</button><button class="btn ghost" data-action="refund-ticket" data-pid="${p.id}" data-tid="${t.id}">Refund</button></div>`;
+              passTickets.appendChild(div);
+            });
+            $('#closePassModal').addEventListener('click', closeModal);
+            $('#savePassModal').addEventListener('click', ()=>{
+              const addFunds = Number($('#addPassFunds').value) || 0;
+              const walletVal = Number($('#editPassWallet').value) || 0;
+              p.wallet = walletVal + addFunds;
+              save(LS.PASS, passengers);
+              renderPassenger($('#passengerSearch').value);
+              renderOverview();
+              closeModal();
+            });
+          });
+        }
+        else if(action === 'cancel-ticket' || action === 'refund-ticket'){
+          // ticket actions inside modal
+          const pid = btn.dataset.pid;
+          const tid = btn.dataset.tid;
+          const p = passengers.find(x=>x.id === pid);
+          if(!p) return;
+          const t = p.tickets.find(x=>x.id === tid);
+          if(!t) return;
+          if(action === 'cancel-ticket'){
+            if(!confirm('Cancel this ticket and refund fare to passenger wallet?')) return;
+            if(t.status === 'cancelled' || t.status === 'refunded'){ alert('Ticket already cancelled/refunded'); return; }
+            t.status = 'cancelled';
+            p.wallet += t.fare;
+            save(LS.PASS, passengers);
+            renderPassenger($('#passengerSearch').value);
+            renderOverview();
+            // refresh modal content: simply re-open the passenger view or close
+            closeModal();
+            alert('Ticket cancelled and fare refunded to wallet.');
+          } else {
+            if(!confirm('Refund this ticket to passenger wallet?')) return;
+            if(t.status === 'refunded'){ alert('Ticket already refunded'); return; }
+            t.status = 'refunded';
+            p.wallet += t.fare;
+            save(LS.PASS, passengers);
+            renderPassenger($('#passengerSearch').value);
+            renderOverview();
+            closeModal();
+            alert('Ticket refunded.');
+          }
+        }
+      });
+
+      /* ---------- Driver tab ---------- */
+      function renderDriver(filter=''){
+        const tbody = $('#driverTable');
+        tbody.innerHTML = '';
+        const q = (filter||'').trim().toLowerCase();
+        const list = drivers.filter(d => (d.name + d.email + d.bus).toLowerCase().includes(q));
+        list.forEach(d=>{
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td data-label="Name">${escapeHtml(d.name)}</td>
+                          <td data-label="Email">${escapeHtml(d.email)}</td>
+                          <td data-label="Bus">${escapeHtml(d.bus)}</td>
+                          <td data-label="Tickets Scanned">${d.ticketsScanned}</td>
+                          <td data-label="Total Amount">${money(d.totalAmount)}</td>
+                          <td data-label="Actions" class="nowrap"><button class="btn view" data-action="view-driver" data-id="${d.id}">View</button></td>`;
+          tbody.appendChild(tr);
+        });
+      }
+      $('#driverSearch').addEventListener('input', (e)=> renderDriver(e.target.value));
+
+      // Add driver
+      $('#openAddDriver').addEventListener('click', ()=>{
+        const html = `
+          <h3>Add Driver</h3>
+          <div style="margin-top:10px" class="flex">
+            <div class="col"><label>Name</label><input id="newDrvName"></div>
+            <div class="col"><label>Email</label><input id="newDrvEmail" type="email"></div>
+          </div>
+          <div style="margin-top:10px" class="flex">
+            <div class="col"><label>Bus Number</label><input id="newDrvBus"></div>
+            <div class="col"><label>Tickets Scanned</label><input id="newDrvTickets" type="number" value="0"></div>
+          </div>
+          <div style="margin-top:14px;display:flex;justify-content:flex-end;gap:8px">
+            <button id="cancelAddDrv" class="btn ghost">Cancel</button>
+            <button id="saveAddDrv" class="btn primary">Add</button>
+          </div>`;
+        openModal(html, ()=>{
+          $('#cancelAddDrv').addEventListener('click', closeModal);
+          $('#saveAddDrv').addEventListener('click', ()=>{
+            const name = $('#newDrvName').value.trim(), email = $('#newDrvEmail').value.trim();
+            if(!name || !email){ alert('Name and email required'); return; }
+            const bus = $('#newDrvBus').value.trim(), ticketsScanned = Number($('#newDrvTickets').value) || 0;
+            drivers.push({ id: genId('d'), name, email, bus, ticketsScanned, totalAmount:0 });
+            save(LS.DRV, drivers);
+            renderDriver($('#driverSearch').value);
+            closeModal();
+          });
+        });
+      });
+
+      /* ---------- Tickets tab (new) ---------- */
+      function collectAllTickets(){
+        const rows = [];
+        passengers.forEach(p=>{
+          p.tickets.forEach(t=>{
+            rows.push({
+              ticketId: t.id,
+              passengerName: p.name,
+              passengerEmail: p.email,
+              route: t.route,
+              status: t.status,
+              fare: t.fare,
+              created: t.created,
+              pid: p.id
+            });
+          });
+        });
+        return rows;
+      }
+
+      function renderTickets(filterStatus='all', q=''){
+        const tbody = $('#ticketsTable');
+        tbody.innerHTML = '';
+        const rows = collectAllTickets().filter(r=>{
+          if(filterStatus && filterStatus !== 'all' && r.status !== filterStatus) return false;
+          if(!q) return true;
+          const s = q.toLowerCase();
+          return (r.ticketId + r.passengerName + r.passengerEmail + r.route).toLowerCase().includes(s);
+        });
+        rows.forEach(r=>{
+          const tr = document.createElement('tr');
+          const statusColor = r.status === 'active' ? 'green' : (r.status === 'used' ? '#0ea5a4' : (r.status === 'cancelled' ? '#dc3545' : '#ff9800'));
+          const actions = [];
+          if(r.status === 'active') actions.push(`<button class="btn danger" data-action="cancel-ticket" data-pid="${r.pid}" data-tid="${r.ticketId}">Cancel</button>`);
+          if(r.status === 'active') actions.push(`<button class="btn warn" data-action="refund-ticket" data-pid="${r.pid}" data-tid="${r.ticketId}">Refund</button>`);
+          const actionHtml = actions.join(' ');
+          tr.innerHTML = `<td data-label="Ticket ID">${escapeHtml(r.ticketId)}</td>
+                          <td data-label="Passenger">${escapeHtml(r.passengerName)}</td>
+                          <td data-label="Route">${escapeHtml(r.route)}</td>
+                          <td data-label="Status" style="color:${statusColor};font-weight:700">${escapeHtml(r.status.toUpperCase())}</td>
+                          <td data-label="Fare">${money(r.fare)}</td>
+                          <td data-label="Date">${escapeHtml(r.created)}</td>
+                          <td data-label="Actions" class="nowrap">${actionHtml}</td>`;
+          tbody.appendChild(tr);
+        });
+      }
+
+      $('#ticketFilterStatus').addEventListener('change', ()=> renderTickets($('#ticketFilterStatus').value, $('#ticketSearch').value));
+      $('#ticketSearch').addEventListener('input', ()=> renderTickets($('#ticketFilterStatus').value, $('#ticketSearch').value));
+      $('#refreshTickets').addEventListener('click', ()=> renderTickets($('#ticketFilterStatus').value, $('#ticketSearch').value));
+
+      // Global delegation for ticket actions (cancel/refund)
+      document.addEventListener('click', (e)=>{
+        const btn = e.target.closest('button');
+        if(!btn) return;
+        const action = btn.dataset.action;
+        if(action === 'cancel-ticket' || action === 'refund-ticket'){
+          const pid = btn.dataset.pid; const tid = btn.dataset.tid;
+          const p = passengers.find(x=>x.id === pid);
+          if(!p) return;
+          const t = p.tickets.find(x=>x.id === tid);
+          if(!t) return;
+          if(action === 'cancel-ticket'){
+            if(!confirm('Cancel this ticket and refund fare to passenger wallet?')) return;
+            if(t.status !== 'active'){ alert('Ticket is not active'); return; }
+            t.status = 'cancelled';
+            p.wallet += t.fare;
+            save(LS.PASS, passengers);
+            renderTickets($('#ticketFilterStatus').value, $('#ticketSearch').value);
+            renderPassenger($('#passengerSearch').value);
+            renderOverview();
+            alert('Ticket cancelled and fare refunded.');
+          } else {
+            if(!confirm('Refund this ticket to passenger wallet?')) return;
+            if(t.status !== 'active'){ alert('Ticket is not active'); return; }
+            t.status = 'refunded';
+            p.wallet += t.fare;
+            save(LS.PASS, passengers);
+            renderTickets($('#ticketFilterStatus').value, $('#ticketSearch').value);
+            renderPassenger($('#passengerSearch').value);
+            renderOverview();
+            alert('Ticket refunded.');
+          }
+        }
+      });
+
+      /* ---------- Export funds logic reused in earlier code ---------- */
+      $('#exportFunds').addEventListener('click', ()=>{
+        const rows = [];
+        passengers.forEach(p=>{
+          p.tickets.forEach(t=>{
+            rows.push({
+              ticketId: t.id,
+              passenger: p.name,
+              email: p.email,
+              route: t.route,
+              status: t.status,
+              fare: t.fare,
+              date: t.created
+            });
+          });
+        });
+        const header = ['Ticket ID','Passenger','Email','Route','Status','Fare','Date'];
+        const csv = [header.join(',')].concat(rows.map(r => [
+          `"${csvSafe(r.ticketId)}"`,
+          `"${csvSafe(r.passenger)}"`,
+          `"${csvSafe(r.email)}"`,
+          `"${csvSafe(r.route)}"`,
+          `"${csvSafe(r.status)}"`,
+          r.fare,
+          `"${csvSafe(r.date)}"`
+        ].join(','))).join('\n');
+        downloadFile(csv, 'funds_export.csv', 'text/csv');
+      });
+
+      function downloadFile(content, filename, type='text/plain'){
+        const blob = new Blob([content], { type });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+        URL.revokeObjectURL(url);
+      }
+
+      /* ---------- Profile ---------- */
+      function renderProfile(){
+        const pr = load(LS.PROFILE, profile);
+        $('#adminName').value = pr.name || '';
+        $('#adminEmail').value = pr.email || '';
+      }
+      $('#saveProfile').addEventListener('click', ()=>{
+        profile.name = $('#adminName').value.trim() || profile.name;
+        save(LS.PROFILE, profile);
+        alert('Profile saved (simulated)');
+      });
+      $('#changePass').addEventListener('click', ()=>{
+        openModal(`<h3>Change Password</h3>
+          <div style="margin-top:10px"><label>Old Password</label><input id="oldPwd" type="password"></div>
+          <div style="margin-top:10px"><label>New Password</label><input id="newPwd" type="password"></div>
+          <div style="margin-top:12px;display:flex;justify-content:flex-end;gap:8px">
+            <button id="cancelChangePwd" class="btn ghost">Cancel</button>
+            <button id="saveChangePwd" class="btn primary">Change</button>
+          </div>`, ()=>{
+            $('#cancelChangePwd').addEventListener('click', closeModal);
+            $('#saveChangePwd').addEventListener('click', ()=>{
+              const oldP = $('#oldPwd').value, newP = $('#newPwd').value;
+              if(!oldP || !newP){ alert('Both fields required'); return; }
+              if(oldP !== auth.password){ alert('Old password incorrect'); return; }
+              auth.password = newP; save(LS.AUTH, auth);
+              alert('Password changed (simulated)'); closeModal();
+            });
+          });
+      });
+
+      /* ---------- helpers ---------- */
+      function escapeHtml(str){ if(str === null || str === undefined) return ''; return String(str).replace(/[&<>"']/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])); }
+      function csvSafe(v){ if(v === null || v === undefined) return ''; return String(v).replace(/"/g,'""'); }
+
+      /* ---------- initial render ---------- */
+      function initialRender(){
+        renderOverview();
+        renderPassenger();
+        renderDriver();
+        renderTickets();
+        renderProfile();
+      }
+      initialRender();
+
+      /* ---------- background simulation: occasionally mark active ticket used ---------- */
+      setInterval(()=>{
+        if(Math.random() < 0.03){
+          const act = [];
+          passengers.forEach(p=>{
+            p.tickets.forEach(t=> { if(t.status === 'active') act.push({p,t}); });
+          });
+          if(act.length){
+            const pick = act[Math.floor(Math.random()*act.length)];
+            pick.t.status = 'used';
+            save(LS.PASS, passengers);
+            // update UI if visible
+            if(document.getElementById('overview').classList.contains('active')) renderOverview();
+            if(document.getElementById('tickets').classList.contains('active')) renderTickets($('#ticketFilterStatus').value, $('#ticketSearch').value);
+          }
+        }
+      }, 7000);
+
+      // expose small API for debugging
+      window._bukAdminSim = {
+        passengers, drivers, setActiveTab
+      };
+    })();
+  </script>
+</body>
+</html>

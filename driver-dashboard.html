@@ -1,0 +1,490 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>BUK Shuttle — Driver Dashboard</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --primary:#5bb0f0;
+      --bg:#f2f8ff;
+      --muted:#6b7280;
+      --card:#fff;
+      --radius:12px;
+      --nav-h:72px;
+      --max-w:1200px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;font-family:'Poppins',system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg);color:#071223;-webkit-font-smoothing:antialiased}
+    header{background:linear-gradient(180deg,var(--primary),#4daae6);color:#fff;padding:12px 16px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:80}
+    header .brand{display:flex;align-items:center;gap:12px;font-weight:700}
+    header img{width:44px;height:44px;border-radius:8px;object-fit:cover;background:#fff2}
+
+    main.container{max-width:var(--max-w);margin:16px auto;padding:12px 16px 96px}
+    h2{margin:0 0 10px 0;font-size:1.05rem}
+
+    /* shared card / grid */
+    .grid{display:grid;gap:12px}
+    .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
+    .card{background:var(--card);border-radius:var(--radius);padding:14px;box-shadow:0 8px 24px rgba(10,20,40,0.04)}
+    .label{color:var(--muted);font-size:.86rem}
+    .value{color:var(--primary);font-weight:700;font-size:1.15rem;margin-top:6px;text-align:center}
+
+    .stats{display:flex;gap:12px;flex-wrap:wrap}
+    .stat-card{flex:1;min-width:120px;background:#eaf7ff;border-radius:10px;padding:12px;text-align:center;box-shadow:0 6px 18px rgba(10,20,40,0.04)}
+    .stat-card h4{margin:0;color:var(--primary)}
+
+    .table-wrap{background:var(--card);border-radius:12px;padding:8px;box-shadow:0 8px 24px rgba(10,20,40,0.04);margin-top:12px;overflow:auto}
+    table{width:100%;border-collapse:collapse;min-width:640px;font-size:.95rem}
+    thead th{background:var(--primary);color:#fff;text-align:left;padding:10px;position:sticky;top:0}
+    tbody td{padding:10px;border-bottom:1px solid rgba(11,23,34,0.05);vertical-align:middle;text-align:center}
+
+    input, select, button{font-family:inherit}
+    input[type="text"], input[type="password"], input[type="file"], select{padding:10px;border-radius:8px;border:1px solid rgba(11,23,34,0.08);width:100%}
+    button{padding:8px 12px;border-radius:8px;border:0;cursor:pointer;font-weight:700}
+    .btn{display:inline-flex;align-items:center;gap:8px}
+    .btn.primary{background:var(--primary);color:#fff}
+    .btn.ghost{background:transparent;border:1px solid rgba(11,23,34,0.06);color:var(--muted)}
+    .btn.warn{background:#ff9800;color:#fff}
+    .btn.danger{background:#dc3545;color:#fff}
+    .btn.view{background:#10b981;color:#fff}
+
+    .scan-container{background:var(--card);border-radius:12px;padding:12px;box-shadow:0 8px 24px rgba(10,20,40,0.04)}
+    #camera{width:100%;border-radius:10px;background:#000;display:block;max-height:420px}
+
+    .bottom-nav{position:fixed;left:0;right:0;bottom:0;height:var(--nav-h);background:var(--card);display:flex;z-index:100;box-shadow:0 -8px 20px rgba(2,6,23,0.08);border-top:1px solid rgba(11,23,34,0.04)}
+    .bottom-nav button{flex:1;border:0;background:transparent;font-weight:700;color:var(--muted);cursor:pointer;font-size:.9rem;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:6px 0}
+    .bottom-nav button.active{color:var(--primary)}
+
+    .modal{display:none;position:fixed;inset:0;background:rgba(2,6,23,0.45);align-items:center;justify-content:center;padding:18px;z-index:200}
+    .modal.open{display:flex}
+    .modal-dialog{background:var(--card);width:100%;max-width:720px;border-radius:12px;padding:18px;box-shadow:0 12px 40px rgba(2,6,23,0.2);max-height:88vh;overflow:auto}
+
+    section.page{display:none}
+    section.page.active{display:block}
+
+    @media(max-width:720px){
+      .stats{flex-direction:column}
+      thead{display:none}
+      table, tbody, tr, td{display:block;width:100%}
+      tr{background:var(--card);padding:10px;margin-bottom:10px;border-radius:8px;box-shadow:0 6px 18px rgba(10,20,40,0.04)}
+      td{padding:6px 0;text-align:left}
+      td::before{content:attr(data-label);font-weight:600;display:block;color:var(--muted);margin-bottom:6px}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <img id="driverAvatar" src="driver-placeholder.png" alt="Driver" onerror="this.src='driver-placeholder.png'">
+      <div>
+        <div id="driverGreeting">Hi, Driver</div>
+        <div id="driverBusHeader" style="font-size:.85rem;color:rgba(255,255,255,0.9)">Bus — BUK-001</div>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Overview -->
+    <section id="overview" class="page active">
+      <h2>Overview</h2>
+
+      <div class="stats">
+        <div class="stat-card"><h4 id="statTotalTickets">0</h4><div class="label">Total Tickets</div></div>
+        <div class="stat-card"><h4 id="statScanned">0</h4><div class="label">Scanned</div></div>
+        <div class="stat-card"><h4 id="statActiveTrip">0</h4><div class="label">Active Trip</div></div>
+        <div class="stat-card"><h4 id="statPending">0</h4><div class="label">Pending</div></div>
+      </div>
+
+      <div style="margin-top:12px" class="grid">
+        <div class="card">
+          <h3>Quick actions</h3>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button id="toggleTrip" class="btn primary">Start Trip</button>
+            <button id="openManualValidate" class="btn ghost">Manual Validate</button>
+            <button id="viewHistory" class="btn view">View Trip History</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Recent Scans</h3>
+          <div id="scanList" class="muted">No scans yet.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Scan -->
+    <section id="scan" class="page">
+      <h2>Scan Tickets</h2>
+      <div class="scan-container">
+        <p><strong>Live QR scan</strong></p>
+        <video id="camera" autoplay muted playsinline></video>
+
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button id="startScan" class="btn primary">Start Scanning</button>
+          <button id="stopScan" class="btn ghost">Stop</button>
+        </div>
+
+        <hr style="margin:12px 0">
+
+        <p><strong>Manual validation</strong></p>
+        <input type="text" id="manualTicket" placeholder="Enter ticket ID">
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button id="validateManualBtn" class="btn primary">Validate</button>
+          <button id="clearManualBtn" class="btn ghost">Clear</button>
+        </div>
+
+        <p id="scanStatus" style="margin-top:10px;color:var(--muted)"></p>
+      </div>
+    </section>
+
+    <!-- History -->
+    <section id="history" class="page">
+      <h2>Trip History</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Date</th><th>Route</th><th>Tickets Scanned</th><th>Driver</th></tr></thead>
+          <tbody id="historyTable"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Notifications -->
+    <section id="notifications" class="page">
+      <h2>Notifications</h2>
+      <div class="card" id="notificationsList"><p class="muted">No new notifications.</p></div>
+    </section>
+
+    <!-- Profile -->
+    <section id="profile" class="page">
+      <h2>Profile</h2>
+      <div class="card" style="max-width:720px">
+        <label>Name</label>
+        <input id="driverName" type="text">
+        <label style="margin-top:8px">Phone</label>
+        <input id="driverPhone" type="text">
+        <label style="margin-top:8px">Bus Number</label>
+        <input id="busNumber" type="text">
+        <label style="margin-top:8px">Profile Picture</label>
+        <input id="profilePicInput" type="file" accept="image/*">
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <button id="saveProfileBtn" class="btn primary">Save Changes</button>
+          <button id="changePassBtn" class="btn ghost">Change Password</button>
+        </div>
+
+        <div style="margin-top:12px">
+          <h4>Change Password</h4>
+          <input id="oldPass" type="password" placeholder="Old Password">
+          <input id="newPass" type="password" placeholder="New Password" style="margin-top:8px">
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="bottom-nav" aria-label="Primary navigation">
+    <button data-target="overview" class="active">Overview</button>
+    <button data-target="scan">Scan</button>
+    <button data-target="history">History</button>
+    <button data-target="notifications">Notifications</button>
+    <button data-target="profile">Profile</button>
+  </nav>
+
+  <div id="modal" class="modal" aria-hidden="true"><div class="modal-dialog" id="modalDialog"></div></div>
+
+  <!-- jsQR for QR decode -->
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+
+  <script>
+    (function(){
+      // Local keys shared with passenger/admin so data corresponds
+      const LS = {
+        TICKETS: 'buk_passenger_tickets_v1',
+        DRIVER_PROFILE: 'buk_driver_profile_v1',
+        DRIVER_LOG: 'buk_driver_log_v1',
+        DRIVER_HISTORY: 'buk_driver_trips_v1',
+        DRIVER_NOTIFS: 'buk_driver_notifications_v1'
+      };
+
+      const $ = s => document.querySelector(s);
+      const $$ = s => Array.from(document.querySelectorAll(s));
+      const genId = (p='id') => p + '-' + Math.random().toString(36).slice(2,9);
+      const now = () => new Date().toISOString().replace('T',' ').split('.')[0];
+
+      // load data (tickets come from passenger page)
+      let tickets = JSON.parse(localStorage.getItem(LS.TICKETS) || '[]');
+      let driverProfile = JSON.parse(localStorage.getItem(LS.DRIVER_PROFILE) || 'null');
+      if(!driverProfile){
+        driverProfile = { name:'John Doe', phone:'09012345678', bus:'BUK-001', avatar:'' };
+        localStorage.setItem(LS.DRIVER_PROFILE, JSON.stringify(driverProfile));
+      }
+      let driverLog = JSON.parse(localStorage.getItem(LS.DRIVER_LOG) || '[]');
+      let tripHistory = JSON.parse(localStorage.getItem(LS.DRIVER_HISTORY) || '[]');
+      let notifications = JSON.parse(localStorage.getItem(LS.DRIVER_NOTIFS) || '[]');
+
+      // elements & state
+      const pages = Array.from(document.querySelectorAll('section.page'));
+      const navBtns = Array.from(document.querySelectorAll('.bottom-nav button'));
+      const statTotalTickets = $('#statTotalTickets'), statScanned = $('#statScanned'), statActiveTrip = $('#statActiveTrip'), statPending = $('#statPending');
+      const scanList = $('#scanList'), historyTable = $('#historyTable'), notificationsList = $('#notificationsList');
+      const driverAvatar = $('#driverAvatar'), driverGreeting = $('#driverGreeting'), driverBusHeader = $('#driverBusHeader');
+
+      const video = $('#camera'), startScanBtn = $('#startScan'), stopScanBtn = $('#stopScan'), validateManualBtn = $('#validateManualBtn');
+      const manualTicketInput = $('#manualTicket'), scanStatus = $('#scanStatus'), clearManualBtn = $('#clearManualBtn');
+
+      const nameInput = $('#driverName'), phoneInput = $('#driverPhone'), busInput = $('#busNumber'), profilePicInput = $('#profilePicInput'), saveProfileBtn = $('#saveProfileBtn');
+
+      const toggleTripBtn = $('#toggleTrip'), openManualValidateBtn = $('#openManualValidate'), viewHistoryBtn = $('#viewHistory');
+
+      // scanning state
+      let scanning = false, videoStream = null, scanWorker = null, activeTrip = null;
+
+      // tab switching
+      function setActiveTab(name){
+        pages.forEach(p => p.classList.toggle('active', p.id === name));
+        navBtns.forEach(b => b.classList.toggle('active', b.dataset.target === name));
+        if(name === 'overview') renderOverview();
+        if(name === 'scan') { renderScan(); /* start camera only when entering scan tab */ startCamera(); }
+        if(name === 'history') renderHistory();
+        if(name === 'notifications') renderNotifications();
+        if(name === 'profile') renderProfile();
+        // stop camera when leaving scan tab
+        if(name !== 'scan') stopCamera();
+        window.scrollTo({ top:0, behavior:'smooth' });
+      }
+      navBtns.forEach(b => b.addEventListener('click', ()=> setActiveTab(b.dataset.target)));
+
+      // overview
+      function computeStats(){
+        const totalTickets = tickets.length;
+        const scanned = driverLog.length;
+        const activeTrips = tripHistory.filter(t=>t.active).length;
+        const pending = tickets.filter(t=>t.status === 'active').length;
+        return { totalTickets, scanned, activeTrips, pending };
+      }
+      function renderOverview(){
+        const s = computeStats();
+        statTotalTickets.textContent = s.totalTickets;
+        statScanned.textContent = s.scanned;
+        statActiveTrip.textContent = s.activeTrips;
+        statPending.textContent = s.pending;
+        if(driverLog.length){
+          scanList.innerHTML = '';
+          driverLog.slice().reverse().slice(0,8).forEach(r=>{
+            const div = document.createElement('div');
+            div.style.padding = '8px';
+            div.style.borderBottom = '1px solid rgba(11,23,34,0.04)';
+            div.innerHTML = `<div style="font-weight:700">${r.ticketId}</div><div class="muted" style="font-size:.9rem">${r.route} • ${r.when}</div>`;
+            scanList.appendChild(div);
+          });
+        } else {
+          scanList.innerHTML = '<div class="muted">No scans yet.</div>';
+        }
+      }
+
+      // scan (camera + manual)
+      async function startCamera(){
+        if(scanning) return;
+        if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){ scanStatus.textContent = 'Camera not supported in this browser.'; return; }
+        try {
+          videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+          video.srcObject = videoStream;
+          scanning = true;
+          startQRWorker();
+          scanStatus.textContent = 'Scanning...';
+        } catch (err){
+          scanStatus.textContent = 'Camera error: ' + (err && err.message ? err.message : '');
+        }
+      }
+      function stopCamera(){
+        scanning = false;
+        if(videoStream){ videoStream.getTracks().forEach(t=>t.stop()); video.srcObject = null; videoStream = null; }
+        stopQRWorker();
+      }
+
+      let canvas, ctx;
+      function startQRWorker(){
+        if(scanWorker) return;
+        canvas = document.createElement('canvas');
+        ctx = canvas.getContext('2d');
+        scanWorker = setInterval(()=> {
+          if(!video || video.readyState !== HTMLMediaElement.HAVE_ENOUGH_DATA) return;
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          if(canvas.width === 0 || canvas.height === 0) return;
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          try {
+            const imageData = ctx.getImageData(0,0,canvas.width,canvas.height);
+            const code = jsQR(imageData.data, imageData.width, imageData.height);
+            if(code && code.data){
+              handleScannedTicket(code.data);
+            }
+          } catch(e){
+            // ignore
+          }
+        }, 700);
+      }
+      function stopQRWorker(){ if(scanWorker){ clearInterval(scanWorker); scanWorker = null; } }
+
+      function handleScannedTicket(ticketId){
+        if(!ticketId) return;
+        // prevent repeated rapid processing
+        if(driverLog.some(l => l.ticketId === ticketId && (Date.now() - new Date(l.when).getTime()) < 5000)) return;
+        const t = tickets.find(x=>x.id === ticketId);
+        if(!t){
+          scanStatus.textContent = `Scanned: ${ticketId} — not found.`;
+          return;
+        }
+        if(t.status !== 'active'){
+          scanStatus.textContent = `Ticket ${ticketId} already ${t.status}.`;
+          return;
+        }
+        t.status = 'used';
+        driverLog.push({ id: genId('log'), ticketId, route: t.route, when: now() });
+        localStorage.setItem(LS.TICKETS, JSON.stringify(tickets));
+        localStorage.setItem(LS.DRIVER_LOG, JSON.stringify(driverLog));
+        renderOverview();
+        scanStatus.textContent = `Ticket ${ticketId} validated.`;
+      }
+
+      $('#clearManualBtn').addEventListener('click', ()=> { manualTicketInput.value = ''; scanStatus.textContent = ''; });
+
+      validateManualBtn.addEventListener('click', ()=>{
+        const id = manualTicketInput.value.trim();
+        if(!id){ alert('Enter ticket ID'); return; }
+        const t = tickets.find(x=>x.id === id);
+        if(!t){ scanStatus.textContent = `Ticket ${id} not found.`; return; }
+        if(t.status !== 'active'){ scanStatus.textContent = `Ticket ${id} is ${t.status}.`; return; }
+        t.status = 'used';
+        driverLog.push({ id: genId('log'), ticketId: id, route: t.route, when: now() });
+        manualTicketInput.value = '';
+        localStorage.setItem(LS.TICKETS, JSON.stringify(tickets));
+        localStorage.setItem(LS.DRIVER_LOG, JSON.stringify(driverLog));
+        renderOverview();
+        scanStatus.textContent = `Ticket ${id} validated manually.`;
+      });
+
+      startScanBtn.addEventListener('click', ()=> startCamera());
+      stopScanBtn.addEventListener('click', ()=> { stopCamera(); scanStatus.textContent = 'Scanner stopped.'; });
+
+      // history
+      function renderHistory(){
+        historyTable.innerHTML = '';
+        if(tripHistory.length === 0){
+          historyTable.innerHTML = `<tr><td colspan="4" style="padding:12px;color:var(--muted)">No trips yet</td></tr>`;
+          return;
+        }
+        tripHistory.slice().reverse().forEach(h=>{
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td data-label="Date">${h.when}</td><td data-label="Route">${h.route}</td><td data-label="Tickets">${h.scanned}</td><td data-label="Driver">${h.driver}</td>`;
+          historyTable.appendChild(tr);
+        });
+      }
+
+      // trip toggling
+      toggleTripBtn.addEventListener('click', ()=>{
+        if(!activeTrip){
+          activeTrip = { id: genId('trip'), when: now(), route: 'Unknown', scanned: 0, driver: driverProfile.name, active: true };
+          toggleTripBtn.textContent = 'End Trip';
+          toggleTripBtn.classList.remove('primary'); toggleTripBtn.classList.add('danger');
+          driverLog = []; localStorage.setItem(LS.DRIVER_LOG, JSON.stringify(driverLog));
+          renderOverview();
+          scanStatus.textContent = 'Trip started';
+        } else {
+          activeTrip.scanned = driverLog.length;
+          activeTrip.active = false;
+          tripHistory.push(activeTrip);
+          activeTrip = null;
+          toggleTripBtn.textContent = 'Start Trip';
+          toggleTripBtn.classList.remove('danger'); toggleTripBtn.classList.add('primary');
+          localStorage.setItem(LS.DRIVER_HISTORY, JSON.stringify(tripHistory));
+          renderOverview();
+          renderHistory();
+          scanStatus.textContent = 'Trip ended';
+        }
+      });
+
+      $('#openManualValidate').addEventListener('click', ()=> setActiveTab('scan'));
+      $('#viewHistory').addEventListener('click', ()=> setActiveTab('history'));
+
+      // notifications
+      function renderNotifications(){
+        notificationsList.innerHTML = '';
+        if(notifications.length === 0){
+          notificationsList.innerHTML = '<p class="muted">No new notifications.</p>';
+          return;
+        }
+        notifications.slice().reverse().forEach(n=>{
+          const div = document.createElement('div');
+          div.style.padding = '10px';
+          div.style.borderBottom = '1px solid rgba(11,23,34,0.04)';
+          div.innerHTML = `<div style="font-weight:700">${n.title}</div><div class="muted" style="font-size:.9rem">${n.when}</div><div style="margin-top:6px">${n.body}</div>`;
+          notificationsList.appendChild(div);
+        });
+      }
+
+      // profile
+      function renderProfile(){
+        nameInput.value = driverProfile.name || '';
+        phoneInput.value = driverProfile.phone || '';
+        busInput.value = driverProfile.bus || '';
+        driverGreeting.textContent = 'Hi, ' + (driverProfile.name || 'Driver');
+        driverBusHeader.textContent = 'Bus — ' + (driverProfile.bus || '');
+        if(driverProfile.avatar) driverAvatar.src = driverProfile.avatar;
+      }
+      profilePicInput.addEventListener('change', (e)=> {
+        const f = e.target.files && e.target.files[0];
+        if(!f) return;
+        const url = URL.createObjectURL(f);
+        driverProfile.avatar = url;
+        $('#driverAvatar').src = url;
+      });
+      saveProfileBtn.addEventListener('click', ()=> {
+        driverProfile.name = nameInput.value.trim() || driverProfile.name;
+        driverProfile.phone = phoneInput.value.trim() || driverProfile.phone;
+        driverProfile.bus = busInput.value.trim() || driverProfile.bus;
+        localStorage.setItem(LS.DRIVER_PROFILE, JSON.stringify(driverProfile));
+        renderProfile();
+        alert('Profile saved');
+      });
+
+      $('#changePassBtn').addEventListener('click', ()=>{
+        openModal(`<h3>Change Password</h3>
+          <div style="margin-top:10px"><label>Old Password</label><input id="modalOldPass" type="password"></div>
+          <div style="margin-top:10px"><label>New Password</label><input id="modalNewPass" type="password"></div>
+          <div style="margin-top:12px;display:flex;justify-content:flex-end;gap:8px"><button id="pwdCancel" class="btn ghost">Cancel</button><button id="pwdSave" class="btn primary">Save</button></div>`, ()=>{
+            $('#pwdCancel').addEventListener('click', closeModal);
+            $('#pwdSave').addEventListener('click', ()=>{ closeModal(); alert('Password changed (simulated)'); });
+        });
+      });
+
+      // modal helpers
+      const modal = $('#modal'), modalDialog = $('#modalDialog');
+      function openModal(html, cb){
+        modalDialog.innerHTML = html;
+        modal.classList.add('open');
+        modal.setAttribute('aria-hidden','false');
+        setTimeout(()=>{ const f = modalDialog.querySelector('input,button,select,textarea'); if(f) f.focus(); if(cb) cb(); },40);
+      }
+      function closeModal(){ modal.classList.remove('open'); modal.setAttribute('aria-hidden','true'); modalDialog.innerHTML = ''; }
+      modal.addEventListener('click', e => { if(e.target === modal) closeModal(); });
+      window.addEventListener('keydown', e => { if(e.key === 'Escape') closeModal(); });
+
+      // initial rendering and cleanup
+      function init(){
+        renderProfile();
+        renderOverview();
+        renderHistory();
+        renderNotifications();
+        window.addEventListener('beforeunload', ()=> stopCamera());
+      }
+      init();
+
+      // small API for debugging
+      window._bukDriver = { setActiveTab, tickets, driverProfile, driverLog, tripHistory };
+    })();
+  </script>
+</body>
+</html>

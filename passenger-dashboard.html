@@ -1,0 +1,485 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>BUK Shuttle — Passenger Dashboard</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --primary:#5bb0f0;
+      --bg:#f2f8ff;
+      --muted:#6b7280;
+      --card: #fff;
+      --radius:12px;
+      --nav-h:72px;
+      --max-w:1100px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;font-family:"Poppins",system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg);color:#071223}
+    header{background:linear-gradient(180deg,var(--primary),#4daae6);color:#fff;padding:14px 18px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:60}
+    header .logo{width:36px;height:36px;border-radius:8px;background:rgba(255,255,255,0.12);display:grid;place-items:center;font-weight:800}
+
+    main{max-width:var(--max-w);margin:18px auto;padding:12px 16px 96px}
+    h2{margin:0 0 10px 0;font-size:1.05rem}
+
+    .cards{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
+    .card{background:var(--card);border-radius:var(--radius);padding:14px;box-shadow:0 8px 24px rgba(10,20,40,0.04)}
+    .label{color:var(--muted);font-size:.86rem}
+    .value{color:var(--primary);font-weight:700;font-size:1.15rem;margin-top:6px}
+
+    .table-wrap{background:var(--card);border-radius:12px;padding:8px;box-shadow:0 8px 24px rgba(10,20,40,0.04);margin-top:12px;overflow:auto}
+    table{width:100%;border-collapse:collapse;min-width:640px;font-size:.95rem}
+    thead th{background:var(--primary);color:#fff;text-align:left;padding:10px;position:sticky;top:0}
+    tbody td{padding:10px;border-bottom:1px solid rgba(11,23,34,0.05);vertical-align:middle}
+
+    input, select{padding:10px;border-radius:8px;border:1px solid rgba(11,23,34,0.06);width:100%;font-size:.95rem}
+
+    .btn{padding:8px 12px;border-radius:8px;border:0;color:#fff;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+    .btn.primary{background:var(--primary)}
+    .btn.ghost{background:transparent;color:var(--muted);border:1px solid rgba(11,23,34,0.06)}
+    .btn.warn{background:#ff9800}
+    .btn.danger{background:#dc3545}
+    .btn.view{background:#10b981}
+
+    .booking-card{background:var(--card);padding:18px;border-radius:14px;margin-bottom:15px;box-shadow:0 6px 18px rgba(0,0,0,0.06)}
+    .ticket-status{display:inline-block;padding:4px 10px;border-radius:12px;font-size:12px;color:#fff;margin-top:8px}
+    .status-active{background:#28a745}
+    .status-used{background:#6c757d}
+    .status-cancelled{background:#dc3545}
+    .ticket-actions{margin-top:12px}
+    .wallet-info{background:var(--card);padding:18px;border-radius:12px;font-weight:700;color:var(--primary);box-shadow:0 6px 18px rgba(0,0,0,0.04);text-align:center}
+
+    .modal{display:none;position:fixed;inset:0;background:rgba(2,6,23,0.45);align-items:center;justify-content:center;padding:18px;z-index:200}
+    .modal.open{display:flex}
+    .modal-dialog{background:var(--card);width:100%;max-width:560px;border-radius:12px;padding:18px;box-shadow:0 12px 40px rgba(2,6,23,0.2);max-height:88vh;overflow:auto}
+
+    .bottom-nav{position:fixed;left:0;right:0;bottom:0;height:var(--nav-h);background:var(--card);display:flex;z-index:100;box-shadow:0 -8px 20px rgba(2,6,23,0.08);border-top:1px solid rgba(11,23,34,0.04)}
+    .bottom-nav button{flex:1;border:0;background:transparent;font-weight:700;color:var(--muted);cursor:pointer;font-size:.9rem;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:6px 0}
+    .bottom-nav button.active{color:var(--primary)}
+
+    section.page{display:none}
+    section.page.active{display:block}
+
+    @media(max-width:520px){
+      thead{display:none}
+      table, tbody, tr, td{display:block;width:100%}
+      tr{background:var(--card);padding:10px;margin-bottom:10px;border-radius:8px;box-shadow:0 6px 18px rgba(10,20,40,0.04)}
+      td{padding:6px 0}
+      td::before{content:attr(data-label);font-weight:600;display:block;color:var(--muted);margin-bottom:6px}
+      .cards{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">B</div>
+    <div>BUK Shuttle — Passenger</div>
+  </header>
+
+  <main id="main" class="container">
+    <section id="overview" class="page active">
+      <h2>Overview</h2>
+      <div class="cards">
+        <div class="card"><div class="label">Wallet Balance</div><div class="value" id="ov-wallet">₦0</div></div>
+        <div class="card"><div class="label">Active Tickets</div><div class="value" id="ov-active">0</div></div>
+        <div class="card"><div class="label">Used Tickets</div><div class="value" id="ov-used">0</div></div>
+        <div class="card"><div class="label">Total Trips</div><div class="value" id="ov-total">0</div></div>
+      </div>
+    </section>
+
+    <section id="book" class="page">
+      <h2>Book a Ride</h2>
+      <div style="max-width:640px">
+        <label for="route">Route</label>
+        <select id="route">
+          <option value="">Select route</option>
+          <option>New Site → Old Site</option>
+          <option>Old Site → New Site</option>
+        </select>
+
+        <div style="margin-top:8px" class="label">Fare</div>
+        <div class="value" id="fare">₦0</div>
+
+        <div style="margin-top:12px;display:flex;gap:8px">
+          <button id="buy" class="btn primary">Buy Ticket</button>
+          <button id="quickTopup" class="btn ghost">Top Up</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="tickets" class="page">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <h2>My Tickets</h2>
+        <div style="display:flex;gap:8px;align-items:center">
+          <select id="filterStatus" style="min-width:140px">
+            <option value="all">All Statuses</option>
+            <option value="active">Active</option>
+            <option value="used">Used</option>
+            <option value="cancelled">Cancelled</option>
+            <option value="refunded">Refunded</option>
+          </select>
+          <input id="searchTicket" placeholder="Search ticket id or route">
+          <button id="refresh" class="btn ghost">Refresh</button>
+        </div>
+      </div>
+
+      <div class="table-wrap" style="margin-top:12px">
+        <table>
+          <thead>
+            <tr><th>Ticket ID</th><th>Route</th><th>Status</th><th>Fare</th><th>Date</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="ticketsBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="wallet" class="page">
+      <h2>My Wallet</h2>
+      <div class="wallet-info" id="walletDisplay">₦0</div>
+
+      <div style="max-width:420px;margin-top:12px">
+        <label for="topupAmount">Add Funds</label>
+        <input id="topupAmount" type="number" placeholder="Enter amount (₦)">
+        <div style="margin-top:8px;display:flex;gap:8px">
+          <button id="addFunds" class="btn primary">Top Up</button>
+          <button id="history" class="btn ghost">History</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="profile" class="page">
+      <h2>Profile</h2>
+      <div class="card" style="max-width:720px">
+        <div style="display:flex;gap:12px">
+          <div style="flex:1"><label class="muted">Name</label><input id="name"></div>
+          <div style="flex:1"><label class="muted">Email</label><input id="email" disabled></div>
+        </div>
+        <div style="margin-top:12px;display:flex;gap:8px">
+          <div style="flex:1"><label class="muted">Phone</label><input id="phone"></div>
+        </div>
+        <div style="margin-top:12px;display:flex;gap:8px">
+          <button id="saveProfile" class="btn primary">Save</button>
+          <button id="chgPwd" class="btn ghost">Change Password</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="bottom-nav">
+    <button data-target="overview" class="active">Overview</button>
+    <button data-target="book">Book</button>
+    <button data-target="tickets">Tickets</button>
+    <button data-target="wallet">Wallet</button>
+    <button data-target="profile">Profile</button>
+  </nav>
+
+  <div id="modal" class="modal" aria-hidden="true"><div class="modal-dialog" id="dialog"></div></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+  <script>
+    // Light, human-style code that mirrors the admin dashboard behavior.
+    (function(){
+      const LS_TICK = 'buk_passenger_tickets_v1';
+      const LS_PROFILE = 'buk_passenger_profile_v1';
+      const LS_WALLET = 'buk_passenger_wallet_v1';
+
+      const qs = s => document.querySelector(s);
+      const qa = s => Array.from(document.querySelectorAll(s));
+      const money = n => '₦' + Number(n || 0).toLocaleString('en-NG');
+
+      // load / seed
+      let tickets = JSON.parse(localStorage.getItem(LS_TICK) || '[]');
+      let profile = JSON.parse(localStorage.getItem(LS_PROFILE) || 'null');
+      let wallet = Number(localStorage.getItem(LS_WALLET) || '0');
+
+      if(!profile){
+        profile = { name:'Ahmad Mustapha', email:'ahmad@example.com', phone:'09012345678' };
+        localStorage.setItem(LS_PROFILE, JSON.stringify(profile));
+      }
+      if(!wallet){
+        wallet = 1000;
+        localStorage.setItem(LS_WALLET, String(wallet));
+      }
+      if(!tickets || tickets.length === 0){
+        tickets = [
+          { id:'BUK1001', route:'New Site → Old Site', status:'active', fare:200, created:'2025-10-23 10:00' },
+          { id:'BUK1000', route:'Old Site → New Site', status:'used', fare:200, created:'2025-10-22 09:00' }
+        ];
+        localStorage.setItem(LS_TICK, JSON.stringify(tickets));
+      }
+
+      // elements
+      const pages = qa('section.page');
+      const navBtns = qa('.bottom-nav button');
+
+      // overview
+      const ovWallet = qs('#ov-wallet');
+      const ovActive = qs('#ov-active');
+      const ovUsed = qs('#ov-used');
+      const ovTotal = qs('#ov-total');
+
+      // book
+      const routeSel = qs('#route');
+      const fareEl = qs('#fare');
+      const buyBtn = qs('#buy');
+      const quickTopup = qs('#quickTopup');
+
+      // tickets
+      const ticketsBody = qs('#ticketsBody');
+      const filterStatus = qs('#filterStatus');
+      const searchTicket = qs('#searchTicket');
+      const refreshBtn = qs('#refresh');
+
+      // wallet
+      const walletDisplay = qs('#walletDisplay');
+      const topupAmount = qs('#topupAmount');
+      const addFundsBtn = qs('#addFunds');
+
+      // profile
+      const nameEl = qs('#name');
+      const emailEl = qs('#email');
+      const phoneEl = qs('#phone');
+      const saveProfileBtn = qs('#saveProfile');
+
+      // modal
+      const modal = qs('#modal');
+      const dialog = qs('#dialog');
+
+      // basic tab switching (bottom nav only)
+      function showTab(id){
+        pages.forEach(p => p.classList.toggle('active', p.id === id));
+        navBtns.forEach(b => b.classList.toggle('active', b.dataset.target === id));
+        if(id === 'overview') renderOverview();
+        if(id === 'book') renderBook();
+        if(id === 'tickets') renderTickets();
+        if(id === 'wallet') renderWallet();
+        if(id === 'profile') renderProfile();
+        window.scrollTo({ top:0, behavior:'smooth' });
+      }
+      navBtns.forEach(b => b.addEventListener('click', ()=> showTab(b.dataset.target)));
+
+      // modal helpers
+      function openModal(html, cb){
+        dialog.innerHTML = html;
+        modal.classList.add('open');
+        modal.setAttribute('aria-hidden','false');
+        setTimeout(()=>{
+          const focusable = dialog.querySelector('input,button,select,textarea');
+          if(focusable) focusable.focus();
+          if(cb) cb();
+        },30);
+      }
+      function closeModal(){ modal.classList.remove('open'); modal.setAttribute('aria-hidden','true'); dialog.innerHTML = ''; }
+      modal.addEventListener('click', e => { if(e.target === modal) closeModal(); });
+      window.addEventListener('keydown', e => { if(e.key === 'Escape') closeModal(); });
+
+      // rendering
+      function computeTotals(){
+        const total = tickets.length;
+        const active = tickets.filter(t => t.status === 'active').length;
+        const used = tickets.filter(t => t.status === 'used').length;
+        return { total, active, used, wallet };
+      }
+      function renderOverview(){
+        const t = computeTotals();
+        ovWallet.textContent = money(t.wallet);
+        ovActive.textContent = t.active;
+        ovUsed.textContent = t.used;
+        ovTotal.textContent = t.total;
+        walletDisplay.textContent = money(t.wallet);
+      }
+
+      function renderBook(){
+        fareEl.textContent = routeSel.value ? '₦200' : '₦0';
+      }
+      routeSel.addEventListener('change', renderBook);
+
+      buyBtn.addEventListener('click', ()=>{
+        const route = routeSel.value;
+        const fare = 200;
+        if(!route) return alert('Pick a route');
+        if(wallet < fare){ openTopup(); return; }
+        wallet -= fare;
+        const id = 'BUK' + Math.floor(100000 + Math.random()*900000);
+        const t = { id, route, status:'active', fare, created: new Date().toLocaleString() };
+        tickets.push(t);
+        localStorage.setItem(LS_TICK, JSON.stringify(tickets));
+        localStorage.setItem(LS_WALLET, String(wallet));
+        renderTickets();
+        renderOverview();
+        showQr(t);
+      });
+
+      quickTopup.addEventListener('click', openTopup);
+
+      function openTopup(){
+        openModal(`
+          <h3>Top up wallet</h3>
+          <div style="margin-top:10px"><label>Amount</label><input id="modalTopUp" type="number" value="500"></div>
+          <div style="margin-top:12px;display:flex;justify-content:flex-end;gap:8px"><button id="tpCancel" class="btn ghost">Cancel</button><button id="tpConfirm" class="btn primary">Top up</button></div>`, ()=>{
+            qs('#tpCancel').addEventListener('click', closeModal);
+            qs('#tpConfirm').addEventListener('click', ()=>{
+              const a = Number(qs('#modalTopUp').value) || 0;
+              if(a <= 0) return alert('Enter amount');
+              wallet += a;
+              localStorage.setItem(LS_WALLET, String(wallet));
+              renderWallet();
+              renderOverview();
+              closeModal();
+              alert(money(a) + ' added');
+            });
+        });
+      }
+
+      function renderTickets(){
+        ticketsBody.innerHTML = '';
+        const status = filterStatus.value;
+        const q = (searchTicket.value || '').toLowerCase().trim();
+        const rows = tickets.slice().reverse().filter(t => {
+          if(status !== 'all' && t.status !== status) return false;
+          if(!q) return true;
+          return (t.id + t.route + t.created).toLowerCase().includes(q);
+        });
+        if(rows.length === 0){
+          ticketsBody.innerHTML = `<tr><td colspan="6" style="padding:12px;color:var(--muted)">No tickets found</td></tr>`;
+          return;
+        }
+        rows.forEach(r => {
+          const color = r.status === 'active' ? 'green' : (r.status === 'used' ? '#6c757d' : '#dc3545');
+          const actions = [];
+          if(r.status === 'active'){
+            actions.push(`<button class="btn danger" data-action="cancel" data-id="${r.id}">Cancel</button>`);
+            actions.push(`<button class="btn warn" data-action="resched" data-id="${r.id}">Reschedule</button>`);
+            actions.push(`<button class="btn view" data-action="qr" data-id="${r.id}">QR</button>`);
+          } else {
+            actions.push(`<button class="btn view" data-action="qr" data-id="${r.id}">QR</button>`);
+          }
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td data-label="Ticket ID">${r.id}</td>
+                          <td data-label="Route">${r.route}</td>
+                          <td data-label="Status" style="color:${color};font-weight:700">${r.status.toUpperCase()}</td>
+                          <td data-label="Fare">${money(r.fare)}</td>
+                          <td data-label="Date">${r.created}</td>
+                          <td data-label="Actions" class="nowrap">${actions.join(' ')}</td>`;
+          ticketsBody.appendChild(tr);
+        });
+      }
+      filterStatus.addEventListener('change', renderTickets);
+      searchTicket.addEventListener('input', renderTickets);
+      refreshBtn.addEventListener('click', renderTickets);
+
+      // ticket actions
+      document.addEventListener('click', e => {
+        const b = e.target.closest('button');
+        if(!b) return;
+        const action = b.dataset.action;
+        if(!action) return;
+        const id = b.dataset.id;
+        if(action === 'cancel'){
+          if(!confirm('Cancel ticket and refund?')) return;
+          const t = tickets.find(x => x.id === id);
+          if(!t || t.status !== 'active') return alert('Cannot cancel');
+          t.status = 'cancelled';
+          wallet += t.fare;
+          localStorage.setItem(LS_TICK, JSON.stringify(tickets));
+          localStorage.setItem(LS_WALLET, String(wallet));
+          renderTickets();
+          renderOverview();
+          alert('Cancelled and refunded');
+        } else if(action === 'resched'){
+          openReschedule(id);
+        } else if(action === 'qr'){
+          const t = tickets.find(x => x.id === id);
+          if(t) showQr(t);
+        }
+      });
+
+      function openReschedule(id){
+        const t = tickets.find(x => x.id === id);
+        if(!t) return;
+        openModal(`
+          <h3>Reschedule</h3>
+          <div style="margin-top:10px"><label>Route</label>
+            <select id="modalRoute"><option>New Site → Old Site</option><option>Old Site → New Site</option></select>
+          </div>
+          <div style="margin-top:12px;display:flex;justify-content:flex-end;gap:8px"><button id="resCancel" class="btn ghost">Cancel</button><button id="resConfirm" class="btn primary">Confirm</button></div>`, ()=>{
+            qs('#modalRoute').value = t.route;
+            qs('#resCancel').addEventListener('click', closeModal);
+            qs('#resConfirm').addEventListener('click', ()=>{
+              const nr = qs('#modalRoute').value;
+              t.route = nr;
+              t.created = new Date().toLocaleString();
+              localStorage.setItem(LS_TICK, JSON.stringify(tickets));
+              renderTickets();
+              renderOverview();
+              closeModal();
+              alert('Rescheduled');
+            });
+        });
+      }
+
+      // QR
+      function showQr(ticket){
+        openModal(`<h3>Ticket ${ticket.id}</h3><div style="margin-top:12px;display:flex;flex-direction:column;align-items:center"><canvas id="qr" width="180" height="180"></canvas><div style="margin-top:8px">${ticket.route}</div><div style="margin-top:8px;color:var(--muted)">Booked: ${ticket.created}</div></div><div style="margin-top:12px;display:flex;justify-content:center;gap:8px"><button id="dlQr" class="btn primary">Download</button><button id="clsQr" class="btn ghost">Close</button></div>`, ()=>{
+          try { new QRious({ element: qs('#qr'), value: ticket.id, size: 180 }); }
+          catch(err){ /* ignore */ }
+          qs('#dlQr').addEventListener('click', ()=>{
+            const c = qs('#qr'); const url = c.toDataURL(); const a = document.createElement('a'); a.href = url; a.download = ticket.id + '.png'; a.click();
+          });
+          qs('#clsQr').addEventListener('click', closeModal);
+        });
+      }
+
+      // wallet
+      function renderWallet(){ walletDisplay.textContent = money(wallet); }
+      addFundsBtn.addEventListener('click', ()=>{
+        const amt = Number(topupAmount.value) || 0;
+        if(amt <= 0) return alert('Enter amount');
+        wallet += amt;
+        localStorage.setItem(LS_WALLET, String(wallet));
+        topupAmount.value = '';
+        renderWallet();
+        renderOverview();
+        alert(money(amt) + ' added');
+      });
+
+      // profile
+      function renderProfile(){
+        nameEl.value = profile.name || '';
+        emailEl.value = profile.email || '';
+        phoneEl.value = profile.phone || '';
+      }
+      saveProfileBtn.addEventListener('click', ()=>{
+        profile.name = nameEl.value.trim() || profile.name;
+        profile.phone = phoneEl.value.trim() || profile.phone;
+        localStorage.setItem(LS_PROFILE, JSON.stringify(profile));
+        alert('Saved');
+        renderOverview();
+      });
+      qs('#chgPwd').addEventListener('click', ()=>{
+        openModal(`<h3>Change Password</h3><div style="margin-top:10px"><label>New Password</label><input id="newPwd" type="password"></div><div style="margin-top:12px;display:flex;justify-content:flex-end;gap:8px"><button id="pwdCancel" class="btn ghost">Cancel</button><button id="pwdSave" class="btn primary">Save</button></div>`, ()=>{
+          qs('#pwdCancel').addEventListener('click', closeModal);
+          qs('#pwdSave').addEventListener('click', ()=>{ closeModal(); alert('Password changed (simulated)'); });
+        });
+      });
+
+      // initial render
+      function init(){
+        renderOverview();
+        renderBook();
+        renderTickets();
+        renderWallet();
+        renderProfile();
+      }
+      init();
+
+      // expose small debug object
+      window._bukPassenger = { tickets, wallet, profile, showTab };
+
+    })();
+  </script>
+</body>
+</html>
