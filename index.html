@@ -4,344 +4,88 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>BUK Shuttle Bus E-Ticketing</title>
-  <link rel="icon" type="image/png" href="favicon.png"/>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
-
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      scroll-behavior: smooth;
-    }
-
-    body {
-      font-family: "Poppins", sans-serif;
-      color: #222;
-      line-height: 1.6;
-      background: #f9f9f9;
-      overflow-x: hidden;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; scroll-behavior: smooth; }
+    body { font-family: "Poppins", sans-serif; color: #222; line-height: 1.6; background: #f9f9f9; overflow-x: hidden; }
 
     /* Navbar */
-    .navbar {
-      position: fixed;
-      top: 0;
-      width: 100%;
-      background: #004080;
-      color: #fff;
-      padding: 15px 0;
-      z-index: 1000;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    }
-    .nav-container {
-      width: 90%;
-      margin: auto;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .logo {
-      font-size: 1.4rem;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    nav {
-      display: flex;
-      gap: 25px;
-    }
-    nav a {
-      color: #fff;
-      text-decoration: none;
-      font-weight: 500;
-      transition: 0.3s;
-    }
-    nav a:hover {
-      color: #ffd700;
-    }
-    .auth-buttons {
-      display: flex;
-      gap: 10px;
-    }
-    .btn {
-      padding: 8px 18px;
-      border-radius: 5px;
-      text-decoration: none;
-      font-weight: 500;
-      transition: 0.3s;
-    }
-    .fill {
-      background: #ffd700;
-      color: #004080;
-    }
-    .fill:hover {
-      background: #ffcc00;
-    }
-    .outline {
-      border: 1px solid #fff;
-      color: #fff;
-    }
-    .outline:hover {
-      background: #fff;
-      color: #004080;
-    }
-    .menu-toggle {
-      display: none;
-      font-size: 1.4rem;
-      cursor: pointer;
-    }
+    .navbar { position: fixed; top: 0; width: 100%; background: #5bb0f0; color: #fff; padding: 15px 0; z-index: 1000; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+    .nav-container { width: 90%; margin: auto; display: flex; align-items: center; justify-content: space-between; }
+    .logo { font-size: 1.4rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+    nav { display: flex; gap: 25px; }
+    nav a { color: #fff; text-decoration: none; font-weight: 500; transition: 0.3s; }
+    nav a:hover { color: #ffd700; }
+    .auth-buttons { display: flex; gap: 10px; }
+    .btn { padding: 8px 18px; border-radius: 5px; text-decoration: none; font-weight: 500; transition: 0.3s; }
+    .fill { background: #ffd700; color: #5bb0f0; }
+    .fill:hover { background: #ffcc00; }
+    .outline { border: 1px solid #fff; color: #fff; }
+    .outline:hover { background: #fff; color: #5bb0f0; }
+    .menu-toggle { display: none; font-size: 1.4rem; cursor: pointer; }
 
     /* Hero */
-    .hero {
-      position: relative;
-      height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      overflow: hidden;
-    }
-    .carousel {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      display: flex;
-      animation: slide 18s infinite;
-    }
-    .carousel img {
-      width: 100%;
-      object-fit: cover;
-      flex-shrink: 0;
-    }
-    @keyframes slide {
-      0%, 33% { transform: translateX(0); }
-      36%, 66% { transform: translateX(-100%); }
-      69%, 99% { transform: translateX(-200%); }
-      100% { transform: translateX(0); }
-    }
-    .overlay {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.55);
-      z-index: 1;
-    }
-    .hero-content {
-      position: relative;
-      z-index: 2;
-      text-align: center;
-      color: #fff;
-      padding: 20px;
-      max-width: 700px;
-    }
-    .hero-content h1 {
-      font-size: 2.8rem;
-      font-weight: 700;
-      margin-bottom: 10px;
-    }
-    .hero-content p {
-      font-size: 1.2rem;
-      margin-bottom: 20px;
-    }
-    .cta-btn {
-      background: #ffd700;
-      color: #004080;
-      padding: 12px 25px;
-      border-radius: 6px;
-      font-weight: 600;
-      text-decoration: none;
-      transition: 0.3s;
-    }
-    .cta-btn:hover {
-      background: #ffcc00;
-    }
+    .hero { position: relative; height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; }
+    .carousel { position: absolute; width: 100%; height: 100%; display: flex; animation: slide 18s infinite; }
+    .carousel img { width: 100%; object-fit: cover; flex-shrink: 0; }
+    @keyframes slide { 0%,33%{transform:translateX(0);} 36%,66%{transform:translateX(-100%);} 69%,99%{transform:translateX(-200%);} 100%{transform:translateX(0);} }
+    .overlay { position: absolute; width: 100%; height: 100%; background: rgba(0,0,0,0.55); z-index:1; }
+    .hero-content { position: relative; z-index: 2; text-align: center; color: #fff; padding: 20px; max-width: 700px; }
+    .hero-content h1 { font-size: 2.8rem; font-weight: 700; margin-bottom: 10px; }
+    .hero-content p { font-size: 1.2rem; margin-bottom: 20px; }
+    .cta-btn { background: #ffd700; color: #5bb0f0; padding: 12px 25px; border-radius: 6px; font-weight: 600; text-decoration: none; transition: 0.3s; }
+    .cta-btn:hover { background: #ffcc00; }
 
     /* Features */
-    .features {
-      padding: 80px 0;
-      text-align: center;
-      background: #fff;
-    }
-    .features h2 {
-      color: #004080;
-      font-size: 2rem;
-      margin-bottom: 40px;
-    }
-    .feature-cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 25px;
-      width: 90%;
-      margin: auto;
-    }
-    .card {
-      background: #f5f7fa;
-      border-radius: 10px;
-      padding: 25px;
-      transition: 0.3s;
-    }
-    .card:hover {
-      background: #004080;
-      color: #fff;
-      transform: translateY(-6px);
-    }
-    .card i {
-      color: #004080;
-      margin-bottom: 10px;
-    }
-    .card:hover i {
-      color: #ffd700;
-    }
-    .card h3 {
-      margin: 10px 0;
-    }
+    .features { padding: 80px 0; text-align: center; background: #fff; }
+    .features h2 { color: #5bb0f0; font-size: 2rem; margin-bottom: 40px; }
+    .feature-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 25px; width: 90%; margin: auto; }
+    .card { background: #f5f7fa; border-radius: 10px; padding: 25px; transition: 0.3s; }
+    .card:hover { background: #5bb0f0; color: #fff; transform: translateY(-6px); }
+    .card i { color: #5bb0f0; margin-bottom: 10px; }
+    .card:hover i { color: #ffd700; }
+    .card h3 { margin: 10px 0; }
 
     /* How It Works */
-    .how {
-      background: #eef3f9;
-      padding: 80px 0;
-      text-align: center;
-    }
-    .how h2 {
-      color: #004080;
-      font-size: 2rem;
-      margin-bottom: 40px;
-    }
-    .steps {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 25px;
-    }
-    .step {
-      background: #fff;
-      border-radius: 10px;
-      padding: 25px;
-      width: 250px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-      transition: 0.3s;
-    }
-    .step span {
-      display: inline-block;
-      font-size: 1.8rem;
-      color: #004080;
-      margin-bottom: 10px;
-    }
-    .step:hover {
-      transform: translateY(-5px);
-    }
+    .how { background: #eef3f9; padding: 80px 0; text-align: center; }
+    .how h2 { color: #5bb0f0; font-size: 2rem; margin-bottom: 40px; }
+    .steps { display: flex; flex-wrap: wrap; justify-content: center; gap: 25px; }
+    .step { background: #fff; border-radius: 10px; padding: 25px; width: 250px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); transition: 0.3s; }
+    .step span { display: inline-block; font-size: 1.8rem; color: #5bb0f0; margin-bottom: 10px; }
+    .step:hover { transform: translateY(-5px); }
 
     /* CTA Section */
-    .cta {
-      background: linear-gradient(to right, #004080, #003366);
-      color: #fff;
-      padding: 80px 0;
-      text-align: center;
-    }
-    .cta-content {
-      width: 90%;
-      margin: auto;
-      max-width: 700px;
-    }
-    .cta-content h2 {
-      font-size: 2rem;
-      margin-bottom: 15px;
-    }
-    .cta-points {
-      list-style: none;
-      margin: 20px 0;
-      text-align: left;
-    }
-    .cta-points li {
-      margin: 10px 0;
-    }
-    .cta-points i {
-      color: #ffd700;
-      margin-right: 10px;
-    }
+    .cta { background: linear-gradient(to right, #5bb0f0, #4a9ad4); color: #fff; padding: 80px 0; text-align: center; }
+    .cta-content { width: 90%; margin: auto; max-width: 700px; }
+    .cta-content h2 { font-size: 2rem; margin-bottom: 15px; }
+    .cta-points { list-style: none; margin: 20px 0; text-align: left; }
+    .cta-points li { margin: 10px 0; }
+    .cta-points i { color: #ffd700; margin-right: 10px; }
 
     /* Footer */
-    .footer {
-      background: #00264d;
-      color: #fff;
-      padding: 60px 0 20px;
-    }
-    .footer-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 30px;
-      width: 90%;
-      margin: auto;
-    }
-    .footer h4 {
-      margin-bottom: 15px;
-      color: #ffd700;
-    }
-    .footer ul {
-      list-style: none;
-    }
-    .footer ul li {
-      margin: 8px 0;
-    }
-    .footer ul li a {
-      color: #fff;
-      text-decoration: none;
-      transition: 0.3s;
-    }
-    .footer ul li a:hover {
-      color: #ffd700;
-    }
-    .socials a {
-      margin-right: 10px;
-      color: #fff;
-      transition: 0.3s;
-    }
-    .socials a:hover {
-      color: #ffd700;
-    }
-    .footer-bottom {
-      text-align: center;
-      margin-top: 30px;
-      font-size: 0.9rem;
-      opacity: 0.8;
-    }
+    .footer { background: #00264d; color: #fff; padding: 60px 0 20px; }
+    .footer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 30px; width: 90%; margin: auto; }
+    .footer h4 { margin-bottom: 15px; color: #ffd700; }
+    .footer ul { list-style: none; }
+    .footer ul li { margin: 8px 0; }
+    .footer ul li a { color: #fff; text-decoration: none; transition: 0.3s; }
+    .footer ul li a:hover { color: #ffd700; }
+    .socials a { margin-right: 10px; color: #fff; transition: 0.3s; }
+    .socials a:hover { color: #ffd700; }
+    .footer-bottom { text-align: center; margin-top: 30px; font-size: 0.9rem; opacity: 0.8; }
 
     /* Responsive */
     @media (max-width: 900px) {
-      nav {
-        display: none;
-        flex-direction: column;
-        background: #004080;
-        position: absolute;
-        top: 60px;
-        left: 0;
-        width: 100%;
-        padding: 10px 0;
-      }
-      nav.active {
-        display: flex;
-      }
-      .menu-toggle {
-        display: block;
-        color: #fff;
-      }
-      .auth-buttons {
-        display: none;
-      }
+      nav { display: none; flex-direction: column; background: #5bb0f0; position: absolute; top: 60px; left: 0; width: 100%; padding: 10px 0; }
+      nav.active { display: flex; }
+      .menu-toggle { display: block; color: #fff; }
+      .auth-buttons { display: none; }
     }
-
     @media (max-width: 600px) {
-      .hero-content h1 {
-        font-size: 2rem;
-      }
-      .hero-content p {
-        font-size: 1rem;
-      }
-      .cta-content h2 {
-        font-size: 1.6rem;
-      }
+      .hero-content h1 { font-size: 2rem; }
+      .hero-content p { font-size: 1rem; }
+      .cta-content h2 { font-size: 1.6rem; }
     }
   </style>
 
@@ -349,15 +93,13 @@
     document.addEventListener("DOMContentLoaded", () => {
       const menuToggle = document.getElementById("menu-toggle");
       const navLinks = document.getElementById("nav-links");
-      menuToggle.addEventListener("click", () => {
-        navLinks.classList.toggle("active");
-      });
+      menuToggle.addEventListener("click", () => { navLinks.classList.toggle("active"); });
     });
   </script>
 </head>
 <body>
   <header class="navbar">
-    <div class="container nav-container">
+    <div class="nav-container">
       <div class="logo"><i class="fa-solid fa-bus"></i> BUK Shuttle</div>
       <nav id="nav-links">
         <a href="#home">Home</a>
@@ -430,7 +172,7 @@
   </section>
 
   <footer class="footer">
-    <div class="container footer-grid">
+    <div class="footer-grid">
       <div>
         <h4>About</h4>
         <p>BUK Shuttle Bus E-Ticketing provides a seamless way for students, drivers, and admins to manage transport digitally.</p>
